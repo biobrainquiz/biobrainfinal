@@ -59,11 +59,10 @@ app.get("/quiz", (req, res) => {
 
 
 // ===== MongoDB Atlas connection =====
-//const mongoURI ="mongodb://biobrain_user:biobrain@cluster0-shard-00-00.abcd.mongodb.net:27017,cluster0-shard-00-01.abcd.mongodb.net:27017,cluster0-shard-00-02.abcd.mongodb.net:27017/biobrain?ssl=true&replicaSet=atlas-xxxx-shard-0&authSource=admin&retryWrites=true&w=majority"
-//const mongoURI = "mongodb+srv://biobrain_user:biobrain@cluster0.abcd.mongodb.net/biobrain?retryWrites=true&w=majority";
 //const mongoURI = "mongodb://127.0.0.1:27017/biobrain"
-
+//const mongoURI = mongodb+srv://biobrain:biobrain@biobraincluster.qw0qfrv.mongodb.net/?appName=biobrainCluster
 const mongoURI = process.env.MANGO_URI;
+
 mongoose.connect(mongoURI)
   .then(() => console.log("Connected to MongoDB Atlas"))
   .catch(err => console.log("MongoDB connection error:", err));
