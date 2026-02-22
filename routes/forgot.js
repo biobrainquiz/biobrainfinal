@@ -32,7 +32,17 @@ router.post("/forgot", async (req, res) => {
 
     await user.save();
 
-    const nodemailer = require("nodemailer");
+    const transporter = nodemailer.createTransport({
+      host: "smtp.gmail.com",
+      port: 587,
+      secure: false,
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
+      },
+    });
+
+    /*const nodemailer = require("nodemailer");
     const dns = require("dns");
 
     dns.setDefaultResultOrder("ipv4first");
@@ -44,7 +54,7 @@ router.post("/forgot", async (req, res) => {
         user: process.env.EMAIL,
         pass: process.env.EMAIL_PASS
       }
-    });
+    });*/
 
     const resetURL = `${process.env.BASE_URL}/reset/${token}`;
 
