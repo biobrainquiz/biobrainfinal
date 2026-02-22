@@ -32,6 +32,11 @@ router.post("/forgot", async (req, res) => {
 
     await user.save();
 
+    const nodemailer = require("nodemailer");
+    const dns = require("dns");
+
+    dns.setDefaultResultOrder("ipv4first");
+
     // 4️⃣ Send email
     const transporter = nodemailer.createTransport({
       service: process.env.EMAIL_SERVICE,
