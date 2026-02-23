@@ -1,32 +1,109 @@
+require("dotenv").config();
+
 const express = require("express");
 const mongoose = require("mongoose");
-const bodyParser = require("body-parser");
+const session = require("express-session");
+const MongoStore = require("connect-mongo").default;
 const useragent = require("express-useragent");
 const path = require("path");
 
-require("dotenv").config();
 const app = express();
 
-// Set EJS
+/* ==============================
+   MongoDB Connection
+============================== */
+
+const mongoURI = process.env.MONGO_URI;
+
+mongoose
+  .connect(mongoURI)
+  .then(() => console.log("✅ Connected to MongoDB"))
+  .catch((err) => console.log("❌ MongoDB connection error:", err));
+
+/* ==============================
+   Session Middleware
+============================== */
+
+
+app.use(
+  session({
+    secret: process.env.SESSION_SECRET || "supersecretkey",
+    resave: false,
+    saveUninitialized: false,
+    store: MongoStore.create({
+      mongoUrl: mongoURI,
+    }),
+    cookie: {
+      maxAge: 15 * 60 * 1000, // 15 minutes
+    },
+  })
+);
+
+app.use((req, res, next) => {
+  res.set("Cache-Control", "no-store");
+  next();
+});
+
+
+/* ==============================
+   Make Session Available to EJS
+============================== */
+
+app.use((req, res, next) => {
+  res.locals.session = req.session;
+  next();
+});
+
+/* ==============================
+   Extend Session on Activity
+============================== */
+
+app.use((req, res, next) => {
+  if (req.session.user) {
+    req.session.touch();
+  }
+  next();
+});
+
+/* ==============================
+   Prevent Back Button After Logout
+============================== */
+
+app.use((req, res, next) => {
+  res.set("Cache-Control", "no-store");
+  next();
+});
+
+/* ==============================
+   View Engine Setup
+============================== */
+
 app.set("view engine", "ejs");
 app.set("views", path.join(__dirname, "views"));
 
-// Middleware
+/* ==============================
+   General Middleware
+============================== */
+
 app.use(express.static(path.join(__dirname, "public")));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(useragent.express());
-app.use(bodyParser.urlencoded({ extended: true }));
-app.use(bodyParser.json());
 
-// Function to detect device type
+/* ==============================
+   Device Detection Function
+============================== */
+
 function getDevice(req) {
   if (req.useragent.isMobile) return "mobile";
   if (req.useragent.isTablet) return "tablet";
   return "desktop";
 }
 
-// Dynamic routes for all pages
+/* ==============================
+   Page Routes
+============================== */
+
 app.get("/", (req, res) => {
   const device = getDevice(req);
   res.render(`pages/${device}/index`);
@@ -57,28 +134,62 @@ app.get("/quiz", (req, res) => {
   res.render(`pages/${device}/quiz`);
 });
 
+app.get("/leaderboard", (req, res) => {
+  const device = getDevice(req);
+  res.render(`pages/${device}/leaderboard`);
+});
 
-// ===== MongoDB Atlas connection =====
-//const mongoURI = "mongodb://127.0.0.1:27017/biobrain"
-//const mongoURI = mongodb+srv://biobrain:biobrain@biobraincluster.qw0qfrv.mongodb.net/?appName=biobrainCluster
-const mongoURI = process.env.MANGO_URI;
+app.get("/quizzes", (req, res) => {
+  const device = getDevice(req);
+  res.render(`pages/${device}/quizzes`);
+});
 
-mongoose.connect(mongoURI)
-  .then(() => console.log("Connected to MongoDB Atlas"))
-  .catch(err => console.log("MongoDB connection error:", err));
+/* ==============================
+   Logout Route
+============================== */
 
-// TODO: Add API routes for login/register/forgot password
+app.get("/logout", (req, res) => {
+  req.session.destroy((err) => {
+    if (err) {
+      console.log("Logout error:", err);
+      return res.redirect("/");
+    }
+
+    res.clearCookie("connect.sid");
+    res.redirect("/");
+  });
+});
+
+app.get("/profile", (req, res) => {
+  if (!req.session.user) {
+    return res.redirect("/login");
+  }
+  const device = getDevice(req);
+  res.render(`pages/${device}/profile`);
+});
+
+/* ==============================
+   API Routes
+============================== */
+
 const registerRoute = require("./routes/register");
-app.use("/api", registerRoute); // Register route
+app.use("/api", registerRoute);
 
 const loginRoute = require("./routes/login");
-app.use("/api", loginRoute); // login route
+app.use("/api", loginRoute);
 
 const forgotRoute = require("./routes/forgot");
-app.use("/api", forgotRoute); // fotgot route
+app.use("/api", forgotRoute);
 
 const resetRoute = require("./routes/reset");
-app.use("/", resetRoute); // reset route
+app.use("/", resetRoute);
+
+/* ==============================
+   Start Server
+============================== */
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+
+app.listen(PORT, () =>
+  console.log(`🚀 Server running on port ${PORT}`)
+);

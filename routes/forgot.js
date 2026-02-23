@@ -1,8 +1,8 @@
 const express = require("express");
 const router = express.Router();
 const crypto = require("crypto");
-const nodemailer = require("nodemailer");
 const User = require("../models/User");
+const { Resend } = require("resend");
 
 router.post("/forgot", async (req, res) => {
   try {
@@ -32,87 +32,39 @@ router.post("/forgot", async (req, res) => {
 
     await user.save();
 
-    const transporter = nodemailer.createTransport({
-      host: "smtp.gmail.com",
-      port: 587,
-      secure: false,
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
-      },
-    });
-
-    /*const nodemailer = require("nodemailer");
-    const dns = require("dns");
-
-    dns.setDefaultResultOrder("ipv4first");
-
-    // 4️⃣ Send email
-    const transporter = nodemailer.createTransport({
-      service: process.env.EMAIL_SERVICE,
-      auth: {
-        user: process.env.EMAIL,
-        pass: process.env.EMAIL_PASS
-      }
-    });*/
+    console.log("Resend API Key exists:", !!process.env.RESEND_API_KEY);
+    console.log("Resend API :", process.env.RESEND_API_KEY);
+console.log("Email From:", process.env.EMAIL_FROM);
 
     const resetURL = `${process.env.BASE_URL}/reset/${token}`;
 
-    await transporter.sendMail({
+    // Send Email using Resend
+    const resend = new Resend(process.env.RESEND_API_KEY);
+    await resend.emails.send({
+      from: process.env.EMAIL_FROM,
       to: user.email,
-      subject: "Reset Your BioBrain Password",
-      text: `
-              Reset Your BioBrain Password
-
-              We received a request to reset your password.
-
-              Click the link below:
-              ${resetURL}
-
-              This link will expire in ${process.env.EMAIL_EXPIRY_IN_MIN} minutes.
-
-              If you did not request this, please ignore this email.`,
+      subject: "BioBrain Password Reset",
       html: `
-        <div style="font-family: Arial, sans-serif; background-color: #f4f6f8; padding: 40px;">
-          <div style="max-width: 600px; margin: auto; background: #ffffff; padding: 30px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.05);">
+        <div style="font-family: Arial, sans-serif; max-width:600px; margin:auto; padding:20px;">
+          <h2 style="color:#1B5E20;">BioBrain Password Reset</h2>
+          <p>Hello ${user.username},</p>
+          <p>You requested to reset your password.</p>
+          <p>This link will expire in ${expiryMinutes} minutes.</p>
 
-          <h2 style="color: #2c3e50; margin-bottom: 20px;">Reset Your Password</h2>
-
-          <p style="font-size: 16px; color: #555;">
-            Hello ${user.username} !!!
-          </p>
-
-          <p style="font-size: 16px; color: #555;">
-            We received a request to reset your BioBrain account password.
-            Click the button below to set a new password.
-          </p>
-
-          <div style="text-align: center; margin: 30px 0;">
+          <div style="text-align:center; margin:30px 0;">
             <a href="${resetURL}"
-               style="background-color: #007bff; color: #ffffff; padding: 12px 25px;
-                      text-decoration: none; border-radius: 5px; font-size: 16px;
-                      display: inline-block;">
+               style="background-color:#1B5E20; color:white;
+                      padding:12px 20px; text-decoration:none;
+                      border-radius:5px;">
               Reset Password
             </a>
           </div>
 
-          <p style="font-size: 14px; color: #888;">
-            This link will expire in  ${process.env.EMAIL_EXPIRY_IN_MIN} minutes for security reasons.
-          </p>
-
-          <p style="font-size: 14px; color: #888;">
-            If you did not request a password reset, please ignore this email.
-            Your account remains secure.
-          </p>
-
-          <hr style="margin: 30px 0; border: none; border-top: 1px solid #eee;">
-
-          <p style="font-size: 13px; color: #aaa; text-align: center;">
-            © ${new Date().getFullYear()} BioBrain. All rights reserved.
-          </p>
+          <p>If you did not request this, please ignore this email.</p>
+          <hr/>
+          <small>© ${new Date().getFullYear()} BioBrain</small>
         </div>
-      </div>
-      `
+      `,
     });
 
     res.json({ success: true, message: "Reset link sent to email!" });
@@ -121,5 +73,4 @@ router.post("/forgot", async (req, res) => {
     res.json({ success: false, message: "Server error!" + err.message });
   }
 });
-
 module.exports = router;

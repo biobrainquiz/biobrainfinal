@@ -745,3 +745,186 @@ footer {
     }
     .register-container h2 { font-size: 28px; }
   }
+
+
+
+  /* =========================================
+   BioBrain User Dropdown (FINAL VERSION)
+========================================= */
+
+
+/* Push user menu to right */
+.nav-links {
+  display: flex;
+  align-items: center;
+  gap: 25px;
+}
+
+.nav-user {
+  margin-left: auto;
+  list-style: none;
+}
+
+/* Container */
+.user-menu {
+  position: relative;
+  display: inline-block;
+}
+
+/* Trigger (avatar + arrow) */
+.user-trigger {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+}
+
+/* Avatar Circle */
+.user-avatar {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #1B5E20, #43A047);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 17px;
+  font-weight: 600;
+  transition: transform 0.2s ease;
+}
+
+.user-avatar:hover {
+  transform: scale(1.05);
+}
+
+/* Arrow */
+.arrow {
+  font-size: 12px;
+  transition: transform 0.3s ease;
+}
+
+/* Rotate arrow when open */
+.user-menu.active .arrow {
+  transform: rotate(180deg);
+}
+
+/* =========================================
+   DROPDOWN GLASS PANEL
+========================================= */
+
+.dropdown {
+  position: absolute;
+  right: 0;
+  top: 60px;
+  width: 260px;
+  border-radius: 18px;
+
+  /* Glass effect */
+  background: rgba(255, 255, 255, 0.25);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  box-shadow: 0 12px 35px rgba(0, 0, 0, 0.18);
+
+  padding: 18px;
+
+  /* Hidden by default */
+  opacity: 0;
+  visibility: hidden;
+  transform: scale(0.92) translateY(12px);
+
+  transition: all 0.28s ease;
+  z-index: 1000;
+}
+
+/* SHOW DROPDOWN */
+.user-menu.active .dropdown {
+  opacity: 1;
+  visibility: visible;
+  transform: scale(1) translateY(0);
+}
+
+/* =========================================
+   HEADER SECTION
+========================================= */
+
+.dropdown-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.dropdown-avatar {
+  width: 45px;
+  height: 45px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #1B5E20, #43A047);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+}
+
+.dropdown-user-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.dropdown-username {
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.dropdown-email {
+  font-size: 12px;
+  opacity: 0.75;
+  word-break: break-word;
+}
+
+/* Divider */
+.dropdown-divider {
+  height: 1px;
+  background: rgba(0, 0, 0, 0.1);
+  margin: 15px 0;
+}
+
+/* =========================================
+   MENU ITEMS
+========================================= */
+
+.dropdown-item {
+  display: block;
+  padding: 10px 12px;
+  border-radius: 10px;
+  text-decoration: none;
+  font-size: 14px;
+  color: #333;
+  transition: background 0.2s ease;
+}
+
+.dropdown-item:hover {
+  background: rgba(255, 255, 255, 0.45);
+}
+
+.logout {
+  color: #d32f2f;
+}
+
+.logout:hover {
+  background: rgba(255, 0, 0, 0.1);
+}
+
+/* =========================================
+   IMPORTANT SAFETY FIX
+========================================= */
+
+/* Make sure navbar does NOT cut dropdown */
+.navbar {
+  overflow: visible !important;
+}
+
+
+
