@@ -184,6 +184,11 @@ app.use("/api", forgotRoute);
 const resetRoute = require("./routes/reset");
 app.use("/", resetRoute);
 
+// 404 handler (keep at bottom)
+app.use((req, res) => {
+  res.status(404).render("404");
+});
+
 /* ==============================
    Start Server
 ============================== */
