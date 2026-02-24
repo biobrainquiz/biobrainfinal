@@ -80,7 +80,7 @@
           });
           const data = await res.json();
           if (data.success) {
-            window.location.href = "/quiz";
+            window.location.href = "/";
           } else {
             errorMsg.innerText = data.message;
           }
