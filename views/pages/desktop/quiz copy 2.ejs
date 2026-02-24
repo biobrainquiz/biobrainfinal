@@ -1,0 +1,275 @@
+<!---- NTA STYLE QUIZ -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>BioBrain - Quiz</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+/* ====== GLOBAL ====== */
+body {
+  margin: 0;
+  font-family: 'Segoe UI', sans-serif;
+  background: #f4f6f9;
+}
+
+header {
+  background: #1B5E20;
+  color: white;
+  padding: 15px 30px;
+  font-size: 20px;
+  font-weight: bold;
+  display: flex;
+  justify-content: space-between;
+}
+
+/* ====== LAYOUT ====== */
+.container {
+  display: flex;
+  height: calc(100vh - 60px);
+}
+
+.left-panel {
+  flex: 3;
+  padding: 30px;
+  overflow-y: auto;
+  background: white;
+}
+
+.right-panel {
+  flex: 1;
+  background: #eef1f4;
+  padding: 20px;
+  border-left: 2px solid #ddd;
+}
+
+/* ====== QUESTION ====== */
+.question-box {
+  font-size: 18px;
+  margin-bottom: 20px;
+}
+
+/* ====== OPTIONS ====== */
+.option {
+  margin-bottom: 15px;
+}
+
+.option input[type="radio"] {
+  display: none;
+}
+
+.option label {
+  display: block;
+  padding: 12px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.option input[type="radio"]:checked + label {
+  background: #1B5E20;
+  color: white;
+  border-color: #1B5E20;
+}
+
+.option label:hover {
+  background: #e8f5e9;
+}
+
+/* ====== BUTTONS ====== */
+.actions {
+  margin-top: 20px;
+}
+
+button {
+  padding: 10px 18px;
+  margin-right: 10px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.save-btn {
+  background: #1976D2;
+  color: white;
+}
+
+.review-btn {
+  background: orange;
+  color: white;
+}
+
+.submit-btn {
+  background: #d32f2f;
+  color: white;
+  width: 100%;
+  margin-top: 20px;
+}
+
+/* ====== PALETTE ====== */
+.palette {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 8px;
+}
+
+.palette button {
+  padding: 10px;
+  font-weight: bold;
+  border-radius: 4px;
+  border: none;
+  cursor: pointer;
+}
+
+.not-visited { background: #ccc; }
+.answered { background: #1B5E20; color: white; }
+.review { background: orange; color: white; }
+
+.timer {
+  font-size: 18px;
+  font-weight: bold;
+  margin-bottom: 20px;
+}
+</style>
+</head>
+
+<body>
+
+<header>
+  BioBrain - Examination Portal
+  <div>Time Left: <span id="timer">00:00</span></div>
+</header>
+
+<div class="container">
+
+  <!-- LEFT SIDE -->
+  <div class="left-panel">
+    <div class="question-box" id="questionText"></div>
+    <div id="optionsBox"></div>
+
+    <div class="actions">
+      <button class="save-btn" onclick="saveAndNext()">Save & Next</button>
+      <button class="review-btn" onclick="markForReview()">Mark for Review</button>
+    </div>
+  </div>
+
+  <!-- RIGHT SIDE -->
+  <div class="right-panel">
+    <div class="timer">Question Palette</div>
+    <div class="palette" id="palette"></div>
+    <button class="submit-btn" onclick="submitQuiz()">Submit Quiz</button>
+  </div>
+
+</div>
+
+<script>
+const questions = <%- JSON.stringify(questions) %>;
+
+let currentIndex = 0;
+let answers = {};
+let reviewMarked = {};
+let timeRemaining = questions.length * 60; // 1 min per question
+
+/* ===== LOAD QUESTION ===== */
+function loadQuestion(index) {
+  const q = questions[index];
+  document.getElementById("questionText").innerText =
+    "Q" + (index + 1) + ". " + q.question;
+
+  const optionsBox = document.getElementById("optionsBox");
+  optionsBox.innerHTML = "";
+
+  q.options.forEach((opt, i) => {
+    const optionHTML = `
+      <div class="option">
+        <input type="radio" name="option" id="opt${i}" value="${opt}"
+        ${answers[q._id] === opt ? "checked" : ""}>
+        <label for="opt${i}">${opt}</label>
+      </div>
+    `;
+    optionsBox.innerHTML += optionHTML;
+  });
+}
+
+/* ===== SAVE & NEXT ===== */
+function saveAndNext() {
+  const selected = document.querySelector('input[name="option"]:checked');
+  if (selected) {
+    answers[questions[currentIndex]._id] = selected.value;
+    updatePalette(currentIndex, "answered");
+  }
+  if (currentIndex < questions.length - 1) {
+    currentIndex++;
+    loadQuestion(currentIndex);
+  }
+}
+
+/* ===== MARK FOR REVIEW ===== */
+function markForReview() {
+  reviewMarked[currentIndex] = true;
+  updatePalette(currentIndex, "review");
+}
+
+/* ===== PALETTE ===== */
+function generatePalette() {
+  const palette = document.getElementById("palette");
+  questions.forEach((q, index) => {
+    const btn = document.createElement("button");
+    btn.innerText = index + 1;
+    btn.className = "not-visited";
+    btn.onclick = () => {
+      currentIndex = index;
+      loadQuestion(index);
+    };
+    palette.appendChild(btn);
+  });
+}
+
+function updatePalette(index, status) {
+  const btn = document.getElementById("palette").children[index];
+  btn.className = status;
+}
+
+/* ===== TIMER ===== */
+function startTimer() {
+  const timer = document.getElementById("timer");
+  const interval = setInterval(() => {
+    let minutes = Math.floor(timeRemaining / 60);
+    let seconds = timeRemaining % 60;
+    timer.innerText =
+      String(minutes).padStart(2, "0") + ":" +
+      String(seconds).padStart(2, "0");
+
+    timeRemaining--;
+
+    if (timeRemaining < 0) {
+      clearInterval(interval);
+      submitQuiz();
+    }
+  }, 1000);
+}
+
+/* ===== SUBMIT ===== */
+async function submitQuiz() {
+  await fetch("/quiz/submit", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ answers })
+  })
+  .then(res => res.json())
+  .then(data => {
+    alert("Your Score: " + data.score);
+    window.location.href = "/";
+  });
+}
+
+/* ===== INIT ===== */
+generatePalette();
+loadQuestion(0);
+startTimer();
+</script>
+
+</body>
+</html>

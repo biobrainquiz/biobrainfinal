@@ -1,51 +1,38 @@
 require("dotenv").config();
 
-const autoSeed = require("./utils/autoSeeder");
 const express = require("express");
 const mongoose = require("mongoose");
 const session = require("express-session");
 const MongoStore = require("connect-mongo").default;
 const useragent = require("express-useragent");
 const path = require("path");
-
 const app = express();
 
-/* ==============================
-   Environment Detection
-============================== */
-
+// Determine environment
 const isProduction = process.env.PRODUCTION === "true";
 
-process.env.MONGO_URI = isProduction
-  ? process.env.PRODUCTION_SERVER_MONGO_URI
-  : process.env.LOCAL_SERVER_MONGO_URI;
+// Dynamically select URIs
+process.env.MONGO_URI = isProduction ? process.env.PRODUCTION_SERVER_MONGO_URI : process.env.LOCAL_SERVER_MONGO_URI;
+process.env.BASE_URI  = isProduction ? process.env.PRODUCTION_SERVER_BASE_URI : process.env.LOCAL_SERVER_BASE_URI;
 
-process.env.BASE_URI = isProduction
-  ? process.env.PRODUCTION_SERVER_BASE_URI
-  : process.env.LOCAL_SERVER_BASE_URI;
-
-const mongoURI = process.env.MONGO_URI;
+console.log("MONGO_URI:", process.env.MONGO_URI);
+console.log("BASE_URI:", process.env.BASE_URI);
 
 /* ==============================
    MongoDB Connection
 ============================== */
 
-mongoose.connect(process.env.MONGO_URI)
-  .then(async () => {
-    console.log("✅ Connected to MongoDB");
-    await autoSeed();   // 🔥 THIS LINE
+const mongoURI = process.env.MONGO_URI;
 
-  })
-  .catch((err) => console.log("❌ MongoDB connection error:", err));
-
-/*mongoose
+mongoose
   .connect(mongoURI)
   .then(() => console.log("✅ Connected to MongoDB"))
-  .catch((err) => console.log("❌ MongoDB connection error:", err));*/
+  .catch((err) => console.log("❌ MongoDB connection error:", err));
 
 /* ==============================
    Session Middleware
 ============================== */
+
 
 app.use(
   session({
@@ -61,14 +48,11 @@ app.use(
   })
 );
 
-/* ==============================
-   Cache Control
-============================== */
-
 app.use((req, res, next) => {
   res.set("Cache-Control", "no-store");
   next();
 });
+
 
 /* ==============================
    Make Session Available to EJS
@@ -91,6 +75,15 @@ app.use((req, res, next) => {
 });
 
 /* ==============================
+   Prevent Back Button After Logout
+============================== */
+
+app.use((req, res, next) => {
+  res.set("Cache-Control", "no-store");
+  next();
+});
+
+/* ==============================
    View Engine Setup
 ============================== */
 
@@ -100,14 +93,13 @@ app.set("views", path.join(__dirname, "views"));
 /* ==============================
    General Middleware
 ============================== */
-
 app.use(express.static(path.join(__dirname, "public")));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(useragent.express());
 
 /* ==============================
-   Device Detection
+   Device Detection Function
 ============================== */
 
 function getDevice(req) {
@@ -115,12 +107,6 @@ function getDevice(req) {
   if (req.useragent.isTablet) return "tablet";
   return "desktop";
 }
-
-/* ==============================
-   Models
-============================== */
-
-const Quiz = require("./models/Question");
 
 /* ==============================
    Page Routes
@@ -151,55 +137,10 @@ app.get("/forgot", (req, res) => {
   res.render(`pages/${device}/forgot`);
 });
 
-/* ==============================
-   🔥 Dynamic Quiz Page Route
-   Example:
-   /quiz?numQuestions=10&difficulty=medium
-============================== */
-
-app.get("/quiz", async (req, res) => {
-  try {
-    const device = getDevice(req);
-
-    const difficulty = req.query.difficulty || "easy";
-
-    const all = await Quiz.find();
-    console.log("Total Questions In DB:", all.length);
-
-    const questions = await Quiz.aggregate([
-      { $match: { difficulty_level: difficulty, category: "gate" } },
-      { $sample: { size: 10 } }
-    ]);
-
-    console.log("Matched Questions:", questions.length);
-
-    res.render(`pages/${device}/quiz`, { questions });
-
-  } catch (err) {
-    console.error("Quiz load error:", err);
-    res.status(500).send("Error loading quiz");
-  }
+app.get("/quiz", (req, res) => {
+  const device = getDevice(req);
+  res.render(`pages/${device}/quiz`);
 });
-
-/*app.get("/quiz", async (req, res) => {
-  try {
-    const device = getDevice(req);
-
-    const numQuestions = parseInt(req.query.numQuestions) || 10;
-    const difficulty = req.query.difficulty || "easy";
-
-    const questions = await Quiz.aggregate([
-      { $match: { difficulty_level: difficulty, category: "gate" } },
-      { $sample: { size: numQuestions } }
-    ]);
-
-    res.render(`pages/${device}/quiz`, { questions });
-
-  } catch (err) {
-    console.error("Quiz load error:", err);
-    res.status(500).send("Error loading quiz");
-  }
-});*/
 
 app.get("/leaderboard", (req, res) => {
   const device = getDevice(req);
@@ -211,16 +152,8 @@ app.get("/quizzes", (req, res) => {
   res.render(`pages/${device}/quizzes`);
 });
 
-app.get("/profile", (req, res) => {
-  if (!req.session.user) {
-    return res.redirect("/login");
-  }
-  const device = getDevice(req);
-  res.render(`pages/${device}/profile`);
-});
-
 /* ==============================
-   Logout
+   Logout Route
 ============================== */
 
 app.get("/logout", (req, res) => {
@@ -229,15 +162,23 @@ app.get("/logout", (req, res) => {
       console.log("Logout error:", err);
       return res.redirect("/");
     }
+
     res.clearCookie("connect.sid");
     res.redirect("/");
   });
 });
 
-/* ==============================
-   Footer Pages
-============================== */
+app.get("/profile", (req, res) => {
+  if (!req.session.user) {
+    return res.redirect("/login");
+  }
+  const device = getDevice(req);
+  res.render(`pages/${device}/profile`);
+});
 
+// ==============================
+// Footer Pages Routes
+// ==============================
 app.get("/disclaimer", (req, res) => {
   const device = getDevice(req);
   res.render(`pages/${device}/disclaimer`);
@@ -257,16 +198,23 @@ app.get("/terms", (req, res) => {
    API Routes
 ============================== */
 
-app.use("/", require("./routes/reset"));
-app.use("/api", require("./routes/register"));
-app.use("/api", require("./routes/login"));
-app.use("/api", require("./routes/forgot"));
-app.use("/api", require("./routes/quiz"));
+const registerRoute = require("./routes/register");
+app.use("/api", registerRoute);
 
-/* ==============================
-   404
-============================== */
+const loginRoute = require("./routes/login");
+app.use("/api", loginRoute);
 
+const forgotRoute = require("./routes/forgot");
+app.use("/api", forgotRoute);
+
+const resetRoute = require("./routes/reset");
+app.use("/", resetRoute);
+
+const quizRouter = require("./routes/quiz");
+app.use("/api", quizRouter);
+
+
+// 404 handler (keep at bottom)
 app.use((req, res) => {
   res.status(404).render("404");
 });
