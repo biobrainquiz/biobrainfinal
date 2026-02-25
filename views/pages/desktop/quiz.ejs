@@ -168,11 +168,16 @@
 
   </div>
 
+  <script id="questionsData" type="application/json">
+  <%- JSON.stringify(questions) %>
+</script>
+
   <script>
     document.addEventListener("DOMContentLoaded", function () {
 
-      const questions = <% - JSON.stringify(questions) %>;
+      //const questions = <% JSON.stringify(questions) %>;
 
+      const questions = JSON.parse(document.getElementById("questionsData").textContent);
       if (!questions || questions.length === 0) {
         alert("No questions available.");
         return;
