@@ -261,7 +261,8 @@ app.use("/", require("./routes/reset"));
 app.use("/api", require("./routes/register"));
 app.use("/api", require("./routes/login"));
 app.use("/api", require("./routes/forgot"));
-app.use("/api", require("./routes/quiz"));
+app.use("/api/quiz", require("./routes/quiz"));
+
 
 /* ==============================
    404

@@ -34,7 +34,7 @@ router.post("/forgot", async (req, res) => {
 
     console.log("Resend API Key exists:", !!process.env.RESEND_API_KEY);
     console.log("Resend API :", process.env.RESEND_API_KEY);
-console.log("Email From:", process.env.EMAIL_FROM);
+    console.log("Email From:", process.env.EMAIL_FROM);
 
     const resetURL = `${process.env.BASE_URL}/reset/${token}`;
 

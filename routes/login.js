@@ -57,12 +57,12 @@ router.post("/login", async (req, res) => {
   }
 
   // 🔓 LOGOUT ROUTE (Step 5)
-router.get("/logout", (req, res) => {
-  req.session.destroy(() => {
-    res.clearCookie("connect.sid");
-    res.redirect("/");
+  router.get("/logout", (req, res) => {
+    req.session.destroy(() => {
+      res.clearCookie("connect.sid");
+      res.redirect("/");
+    });
   });
-});
 
 });
 
