@@ -309,25 +309,6 @@
           alert("Submission failed.");
         }
       }
-      /* ================= SUBMIT ================= */
-      async function submitQuiz1() {
-        try {
-          const response = await fetch("/api/quiz/submit", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ answers })
-          });
-
-          const data = await response.json();
-
-          alert("Your Score: " + data.score);
-          window.location.href = "/";
-
-        } catch (err) {
-          console.error(err);
-          //alert("quiz.ejs:Submission failed."+err);
-        }
-      }
 
       /* ================= EVENT LISTENERS ================= */
       document.getElementById("saveBtn").addEventListener("click", saveAndNext);

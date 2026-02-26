@@ -1,6 +1,6 @@
 require("dotenv").config();
 
-const autoSeed = require("./utils/autoSeeder");
+const {autoSeed} = require("./utils/autoSeeder");
 const express = require("express");
 const mongoose = require("mongoose");
 const session = require("express-session");
@@ -161,17 +161,13 @@ app.get("/quiz", async (req, res) => {
   try {
     const device = getDevice(req);
 
-    const difficulty = req.query.difficulty || "easy";
+    const difficulty = req.query.difficulty || "hard";
 
     const all = await Quiz.find();
-    console.log("Total Questions In DB:", all.length);
-
     const questions = await Quiz.aggregate([
       { $match: { difficulty_level: difficulty, category: "gate" } },
-      { $sample: { size: 10 } }
+      { $sample: { size: 20 } }
     ]);
-
-    console.log("Matched Questions:", questions.length);
 
     res.render(`pages/${device}/quiz`, { questions });
 
@@ -274,10 +270,8 @@ app.use((req, res) => {
 
 /* ==============================
    Start Server
-============================== */
-
+============================= */
 const PORT = process.env.PORT || 3000;
-
 app.listen(PORT, () =>
   console.log(`🚀 Server running on port ${PORT}`)
 );
