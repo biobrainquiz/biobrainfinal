@@ -144,7 +144,15 @@
 <body>
 
   <header>
-    BioBrain - Examination Portal
+    <div>
+      Hello, <%= user.username %> 👋 | BioBrain - Examination Portal on
+        <%= exam.toUpperCase() %>
+          <%= subject.charAt(0).toUpperCase() + subject.slice(1) %>
+            • <%= count %> Questions
+              • <%= difficulty.charAt(0).toUpperCase() + difficulty.slice(1) %> Level
+    </div>
+
+    <!--  BioBrain - Examination Portal on [[EXAM]] [[SUBJECT]] for [[NO.OF QUESTIONS]] [[DIFFICULY]]-->
     <div>Time Left: <span id="timer">00:00</span></div>
   </header>
 
@@ -293,7 +301,12 @@
           const response = await fetch("/api/quiz/submit", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ answers, questions }) // send answers + questions
+            body: JSON.stringify({
+              answers,
+              questions,
+              exam: "<%= exam %>",
+              subject: "<%= subject %>"
+            }) // send answers + questions
           });
 
           // Get the rendered HTML from server

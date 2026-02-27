@@ -169,7 +169,7 @@ app.get("/quiz1", requireLogin,async (req, res) => {
 
     const all = await Quiz.find();
     const questions = await Quiz.aggregate([
-      { $match: { difficulty_level: difficulty, category: "gate" } },
+      { $match: { difficulty_level: difficulty, exam: "gate" } },
       { $sample: { size: 20 } }
     ]);
 
@@ -187,27 +187,23 @@ app.get("/quiz/:exam/:subject/start", requireLogin, async (req, res) => {
     const device = getDevice(req);
     const { exam, subject } = req.params;
     const { count, difficulty } = req.query;
-    console.log(count);
-    console.log(difficulty);
-    console.log(exam);
-    console.log(subject);
     const questions = await Question.aggregate([
         {
             $match: {
-                category: exam,
-                //subject:"",
+                exam: exam,
+                subject:subject,
                 difficulty_level: difficulty
             }
         },
         { $sample: { size: parseInt(count) } }
     ]);
-    console.log(questions);
-    console.log(exam);
-    console.log(subject);
     res.render(`pages/${device}/quiz`, {
         questions,
         exam,
-        subject
+        subject,
+        user: req.session.user,      // contains username
+        count,
+        difficulty
     });
 });
 
