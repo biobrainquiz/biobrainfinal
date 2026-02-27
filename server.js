@@ -233,7 +233,6 @@ app.get("/preparequiz/:exam/:subject", requireLogin, async (req, res) => {
 app.post("/create-order", requireLogin, async (req, res) => {
 
     const { exam, subject, count, difficulty } = req.body;
-
     // Save quiz config temporarily in session
     req.session.quizConfig = {
         exam,
