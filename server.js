@@ -7,6 +7,10 @@ const session = require("express-session");
 const MongoStore = require("connect-mongo").default;
 const useragent = require("express-useragent");
 const path = require("path");
+const router = express.Router();
+const requireLogin = require("./middleware/requireLogin");
+const QuizResult = require("./models/QuizResult");
+const Question = require("./models/Question");
 
 const app = express();
 
@@ -157,7 +161,7 @@ app.get("/forgot", (req, res) => {
    /quiz?numQuestions=10&difficulty=medium
 ============================== */
 
-app.get("/quiz", async (req, res) => {
+app.get("/quiz1", requireLogin,async (req, res) => {
   try {
     const device = getDevice(req);
 
@@ -177,25 +181,80 @@ app.get("/quiz", async (req, res) => {
   }
 });
 
-/*app.get("/quiz", async (req, res) => {
-  try {
+// rest style quiz
+app.get("/quiz/:exam/:subject/start", requireLogin, async (req, res) => {
+
     const device = getDevice(req);
-
-    const numQuestions = parseInt(req.query.numQuestions) || 10;
-    const difficulty = req.query.difficulty || "easy";
-
-    const questions = await Quiz.aggregate([
-      { $match: { difficulty_level: difficulty, category: "gate" } },
-      { $sample: { size: numQuestions } }
+    const { exam, subject } = req.params;
+    const { count, difficulty } = req.query;
+    console.log(count);
+    console.log(difficulty);
+    console.log(exam);
+    console.log(subject);
+    const questions = await Question.aggregate([
+        {
+            $match: {
+                category: exam,
+                //subject:"",
+                difficulty_level: difficulty
+            }
+        },
+        { $sample: { size: parseInt(count) } }
     ]);
+    console.log(questions);
+    console.log(exam);
+    console.log(subject);
+    res.render(`pages/${device}/quiz`, {
+        questions,
+        exam,
+        subject
+    });
+});
 
-    res.render(`pages/${device}/quiz`, { questions });
 
-  } catch (err) {
-    console.error("Quiz load error:", err);
-    res.status(500).send("Error loading quiz");
-  }
-});*/
+app.get("/preparequiz/:exam/:subject", requireLogin, async (req, res) => {
+
+    let { exam, subject } = req.params;
+
+    exam = exam.toLowerCase();
+    subject = subject.toLowerCase();
+
+    const userId = req.session.user._id;
+
+    const previousStats = await QuizResult.findOne({
+        user: userId,
+        exam,
+        subject
+    }).sort({ createdAt: -1 });
+  const device = getDevice(req);
+    res.render(`pages/${device}/startquiz`, {
+        exam,
+        subject,
+        previousStats
+    });
+});
+
+app.post("/create-order", requireLogin, async (req, res) => {
+
+    const { exam, subject, count, difficulty } = req.body;
+
+    // Save quiz config temporarily in session
+    req.session.quizConfig = {
+        exam,
+        subject,
+        count,
+        difficulty
+    };
+
+    // After payment success redirect here
+    res.redirect(`/quiz/${exam}/${subject}/start?count=${count}&difficulty=${difficulty}`);
+});
+
+
+app.get("/profile",requireLogin, (req, res) => {
+  const device = getDevice(req);
+  res.render(`pages/${device}/profile`);
+});
 
 app.get("/leaderboard", (req, res) => {
   const device = getDevice(req);
@@ -207,13 +266,7 @@ app.get("/quizzes", (req, res) => {
   res.render(`pages/${device}/quizzes`);
 });
 
-app.get("/profile", (req, res) => {
-  if (!req.session.user) {
-    return res.redirect("/login");
-  }
-  const device = getDevice(req);
-  res.render(`pages/${device}/profile`);
-});
+
 
 /* ==============================
    Logout

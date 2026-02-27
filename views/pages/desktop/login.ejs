@@ -54,8 +54,8 @@
         document.getElementById("captcha").innerText = currentCaptcha;
       });
 
-        // Login button click
-        document.getElementById("loginBtn").addEventListener("click", async () => {
+      // Login button click
+      document.getElementById("loginBtn").addEventListener("click", async () => {
         const identifier = document.getElementById("identifier").value;
         const password = document.getElementById("password").value;
         const captchaInput = document.getElementById("captchaInput").value;
@@ -80,7 +80,8 @@
           });
           const data = await res.json();
           if (data.success) {
-            window.location.href = "/";
+            //window.location.href = "/";
+            window.location.href = data.redirect;;
           } else {
             errorMsg.innerText = data.message;
           }

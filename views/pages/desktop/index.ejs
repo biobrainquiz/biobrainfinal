@@ -1,11 +1,12 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>BioBrain - Home</title>
     <link rel="stylesheet" href="/css/desktopStyle.css" />
-    
+
 </head>
 
 <body>
@@ -17,7 +18,7 @@
             <h2>Master Life Sciences with Smart Quizzes</h2>
             <p>Challenge yourself with quizzes in Zoology, Botany, Genetics, Ecology & More.</p>
             <div>
-                <button class="btn-primary">Start Quiz</button>
+                <button class="btn-primary" onclick="startQuiz('any')">Start Quiz</button>
                 <button class="btn-secondary">View Leaderboard</button>
             </div>
         </section>
@@ -29,22 +30,22 @@
                 <div class="card">
                     <h4>NEET</h4>
                     <p>Zoology</p>
-                    <button>Start</button>
+                    <button onclick="startQuiz('neet','zoology')">Start</button>
                 </div>
                 <div class="card">
                     <h4>DL/JL/Asst. Prof.</h4>
                     <p>Zoology</p>
-                    <button>Start</button>
+                    <button onclick="startQuiz('dljl','zoology')">Start</button>
                 </div>
                 <div class="card">
                     <h4>CSIR.NET/SLET/SET</h4>
                     <p>Life Sciences</p>
-                    <button>Start</button>
+                    <button onclick="startQuiz('csir','lifesciences')">Start</button>
                 </div>
                 <div class="card">
                     <h4>GATE</h4>
                     <p>Zoology</p>
-                    <button>Start</button>
+                    <button onclick="startQuiz('gate','zoology')">Start</button>
                 </div>
             </div>
         </section>
@@ -71,7 +72,12 @@
                 <li>5️⃣ Meera – 830 Points</li>
             </ul>
         </section>
-
+        <script>
+            function startQuiz(exam, subject) {
+                window.location.href = `/preparequiz/${exam}/${subject}`;
+            }
+        </script>
+        </script>
         <%- include('../../partials/desktop/footer') %>
 </body>
 

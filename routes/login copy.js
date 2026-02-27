@@ -3,8 +3,6 @@ const router = express.Router();
 const bcrypt = require("bcryptjs");
 const User = require("../models/User");
 
-
-// 🔐 LOGIN ROUTE
 router.post("/login", async (req, res) => {
   try {
     const { identifier, password } = req.body;
@@ -34,20 +32,17 @@ router.post("/login", async (req, res) => {
       });
     }
 
-    // 3️⃣ CREATE SESSION
+
+    // 🔐 STEP 4 — CREATE SESSION HERE
     req.session.user = {
       id: user._id,
       username: user.username,
-      role: user.role || "user"  // ready for admin feature
     };
 
-    // 4️⃣ Redirect logic support
-    const redirectUrl = req.session.redirectTo || "/";
-    delete req.session.redirectTo;
-
+    // 3️⃣ Success
     res.json({
       success: true,
-      redirect: redirectUrl
+      message: "Login successful!"
     });
 
   } catch (err) {
@@ -60,15 +55,15 @@ router.post("/login", async (req, res) => {
         : err.message
     });
   }
-});
 
-
-// 🔓 LOGOUT ROUTE (outside login)
-router.get("/logout", (req, res) => {
-  req.session.destroy(() => {
-    res.clearCookie("connect.sid");
-    res.redirect("/");
+  // 🔓 LOGOUT ROUTE (Step 5)
+  router.get("/logout", (req, res) => {
+    req.session.destroy(() => {
+      res.clearCookie("connect.sid");
+      res.redirect("/");
+    });
   });
+
 });
 
 module.exports = router;

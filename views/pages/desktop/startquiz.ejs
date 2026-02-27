@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>BioBrain - Prepare Quiz</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/css/desktopStyle.css">
+</head>
+
+<body>
+
+    <%- include('../../partials/desktop/header') %>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-overlay"></div>
+        <h2>
+            Prepare for 
+            <%= exam.charAt(0).toUpperCase() + exam.slice(1) %> -
+            <%= subject.charAt(0).toUpperCase() + subject.slice(1) %>
+        </h2>
+        <p>Customize your quiz settings and test your knowledge.</p>
+    </section>
+
+    <!-- Main Content -->
+    <section class="section">
+        <div class="card-container">
+
+            <!-- Previous Performance Card -->
+            <div class="card" style="flex:1; min-width:300px;">
+                <h4>📊 Your Previous Performance</h4>
+
+                <% if (previousStats) { %>
+                    <p><strong>Score:</strong> <%= previousStats.score %></p>
+                    <p><strong>Total Questions:</strong> <%= previousStats.totalQuestions %></p>
+                    <p><strong>Accuracy:</strong> <%= previousStats.accuracy %>%</p>
+                    <p><strong>Date:</strong> <%= new Date(previousStats.createdAt).toDateString() %></p>
+                <% } else { %>
+                    <p>No previous attempts found for this subject.</p>
+                <% } %>
+            </div>
+
+            <!-- Quiz Configuration Card -->
+            <div class="card" style="flex:1; min-width:300px;">
+                <h4>⚙ Configure Your Quiz</h4>
+
+                <form action="/create-order" method="POST">
+
+                    <input type="hidden" name="exam" value="<%= exam %>">
+                    <input type="hidden" name="subject" value="<%= subject %>">
+
+                    <label>No. of Questions</label>
+                    <select name="count" required>
+                        <option value="10">10 Questions</option>
+                        <option value="20" selected="true">20 Questions</option>
+                        <option value="50">50 Questions</option>
+                    </select>
+
+                    <br><br>
+
+                    <label>Difficulty Level</label>
+                    <select name="difficulty" required>
+                        <option value="easy" >Easy</option>
+                        <option value="medium">Medium</option>
+                        <option value="hard" selected="true">Hard</option>
+                    </select>
+
+                    <br><br>
+
+                    <button type="submit" class="btn-primary">
+                        Proceed to Payment
+                    </button>
+
+                </form>
+            </div>
+
+        </div>
+    </section>
+
+    <%- include('../../partials/desktop/footer') %>
+
+</body>
+</html>
