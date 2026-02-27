@@ -57,11 +57,18 @@ const questionSchema = new mongoose.Schema(
       min: 1
     },
 
-    category: {
+    exam: {
       type: String,
       required: true,
       default: "gate"
-    }
+    },
+    
+    subject: {
+      type: String,
+      required: true,
+      default: "zoology"
+    },
+    
   },
   {
     collection: "mcqs",   // 🔥 Ensures it uses existing mcqs collection
