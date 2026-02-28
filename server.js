@@ -1,6 +1,6 @@
 require("dotenv").config();
 
-const {autoSeed} = require("./utils/autoSeeder");
+const { autoSeed } = require("./utils/autoSeeder");
 const express = require("express");
 const mongoose = require("mongoose");
 const session = require("express-session");
@@ -161,7 +161,7 @@ app.get("/forgot", (req, res) => {
    /quiz?numQuestions=10&difficulty=medium
 ============================== */
 
-app.get("/quiz1", requireLogin,async (req, res) => {
+app.get("/quiz1", requireLogin, async (req, res) => {
   try {
     const device = getDevice(req);
 
@@ -184,69 +184,117 @@ app.get("/quiz1", requireLogin,async (req, res) => {
 // rest style quiz
 app.get("/quiz/:exam/:subject/start", requireLogin, async (req, res) => {
 
-    const device = getDevice(req);
-    const { exam, subject } = req.params;
-    const { count, difficulty } = req.query;
-    const questions = await Question.aggregate([
-        {
-            $match: {
-                exam: exam,
-                subject:subject,
-                difficulty_level: difficulty
-            }
-        },
-        { $sample: { size: parseInt(count) } }
-    ]);
-    res.render(`pages/${device}/quiz`, {
-        questions,
-        exam,
-        subject,
-        user: req.session.user,      // contains username
-        count,
-        difficulty
-    });
+  const device = getDevice(req);
+  const { exam, subject } = req.params;
+  const { count, difficulty } = req.query;
+  const questions = await Question.aggregate([
+    {
+      $match: {
+        exam: exam,
+        subject: subject,
+        difficulty_level: difficulty
+      }
+    },
+    { $sample: { size: parseInt(count) } }
+  ]);
+  res.render(`pages/${device}/quiz`, {
+    questions,
+    exam,
+    subject,
+    user: req.session.user,      // contains username
+    count,
+    difficulty
+  });
 });
+
 
 
 app.get("/preparequiz/:exam/:subject", requireLogin, async (req, res) => {
 
+  try {
     let { exam, subject } = req.params;
 
+    const userId = req.session.user._id;
     exam = exam.toLowerCase();
     subject = subject.toLowerCase();
 
-    const userId = req.session.user._id;
+    // start of past exam performance
+    const username = req.session.user.username; // logged-in user
+    const page = parseInt(req.query.page) || 1; // current page
+    const limit = 10; // results per page
 
+    // Count total attempts
+    const totalResults = await QuizResult.countDocuments({ username, exam, subject });
+
+    // Fetch results sorted by latest
+    const quizResults = await QuizResult.find({ username, exam, subject })
+      .sort({ createdAt: -1 })
+      .skip((page - 1) * limit)
+      .limit(limit)
+      .lean();
+
+    // Calculate accuracy for each
+    quizResults.forEach(q => {
+      q.accuracy = ((q.right / q.noq) * 100).toFixed(2);
+    });
+
+    const totalPages = Math.ceil(Math.min(totalResults, 50) / limit); // max 50 results
+    // end of past exam performance
+
+
+    /*const userId = req.session.user._id;
     const previousStats = await QuizResult.findOne({
         user: userId,
         exam,
         subject
-    }).sort({ createdAt: -1 });
-  const device = getDevice(req);
+    }).sort({ createdAt: -1 });*/
+
+    console.log(req.session);
+    console.log(exam);
+    console.log(subject);
+    console.log(quizResults);
+    console.log(page);
+    console.log(totalPages);
+
+
+    const device = getDevice(req);
     res.render(`pages/${device}/startquiz`, {
-        exam,
-        subject,
-        previousStats
+      exam,
+      subject,
+      quizResults,
+      currentPage: page,
+      totalPages
     });
+  }
+  catch (err) {
+    console.error(err);
+    res.render(`pages/${device}/startquiz`, {
+      exam,
+      subject,
+      quizResults: [],
+      currentPage: 1,
+      totalPages: 1
+    });
+  }
 });
 
 app.post("/create-order", requireLogin, async (req, res) => {
 
-    const { exam, subject, count, difficulty } = req.body;
-    // Save quiz config temporarily in session
-    req.session.quizConfig = {
-        exam,
-        subject,
-        count,
-        difficulty
-    };
+  const { exam, subject, count, difficulty } = req.body;
+  // Save quiz config temporarily in session
+  req.session.quizConfig = {
+    exam,
+    subject,
+    count,
+    difficulty
+  };
 
-    // After payment success redirect here
-    res.redirect(`/quiz/${exam}/${subject}/start?count=${count}&difficulty=${difficulty}`);
+  // After payment success redirect here
+  res.redirect(`/quiz/${exam}/${subject}/start?count=${count}&difficulty=${difficulty}`);
 });
 
 
-app.get("/profile",requireLogin, (req, res) => {
+app.get("/profile", requireLogin, (req, res) => {
   const device = getDevice(req);
   res.render(`pages/${device}/profile`);
 });

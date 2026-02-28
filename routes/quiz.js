@@ -27,7 +27,7 @@ router.post("/start", async (req, res) => {
 // ================= SUBMIT QUIZ =================
 router.post("/submit", async (req, res) => {
     try {
-        const { answers, questions, exam, subject } = req.body;
+        const { answers, questions, exam, subject ,difficulty} = req.body;
 
         let score = 0;
         let correct = 0;
@@ -65,6 +65,7 @@ router.post("/submit", async (req, res) => {
             username: req.session.user.username,
             exam,
             subject,
+            difficulty,
             noq: totalQuestions,
             attempted,
             right: correct,

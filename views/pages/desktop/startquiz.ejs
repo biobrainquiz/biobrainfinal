@@ -1,83 +1,173 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <title>BioBrain - Prepare Quiz</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="/css/desktopStyle.css">
+    <style>
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th,
+        td {
+            padding: 8px;
+            border: 1px solid #ccc;
+            text-align: center;
+        }
+
+        .pagination {
+            margin-top: 10px;
+            text-align: center;
+        }
+
+        .pagination a {
+            margin: 0 5px;
+            padding: 5px 10px;
+            border: 1px solid #ccc;
+            text-decoration: none;
+        }
+
+        .pagination a.active {
+            background-color: #007bff;
+            color: white;
+        }
+    </style>
 </head>
 
 <body>
 
     <%- include('../../partials/desktop/header') %>
 
-    <!-- Hero Section -->
-    <section class="hero">
-        <div class="hero-overlay"></div>
-        <h2>
-            Prepare for 
-            <%= exam.charAt(0).toUpperCase() + exam.slice(1) %> -
-            <%= subject.charAt(0).toUpperCase() + subject.slice(1) %>
-        </h2>
-        <p>Customize your quiz settings and test your knowledge.</p>
-    </section>
+        <!-- Hero Section -->
+        <section class="hero">
+            <div class="hero-overlay"></div>
+            <h2>
+                Prepare for
+                <%= exam.charAt(0).toUpperCase() + exam.slice(1) %> -
+                    <%= subject.charAt(0).toUpperCase() + subject.slice(1) %>
+            </h2>
+            <p>Customize your quiz settings and test your knowledge.</p>
+        </section>
 
-    <!-- Main Content -->
-    <section class="section">
-        <div class="card-container">
+        <!-- Main Content -->
+        <section class="section">
+            <div class="card-container">
 
-            <!-- Previous Performance Card -->
-            <div class="card" style="flex:1; min-width:300px;">
-                <h4>📊 Your Previous Performance</h4>
+                <!-- Previous Performance Card -->
+                <div class="card" style="flex:1; min-width:300px;">
+                    <h4>📊 Your Last Quiz Performances</h4>
 
-                <% if (previousStats) { %>
-                    <p><strong>Score:</strong> <%= previousStats.score %></p>
-                    <p><strong>Total Questions:</strong> <%= previousStats.totalQuestions %></p>
-                    <p><strong>Accuracy:</strong> <%= previousStats.accuracy %>%</p>
-                    <p><strong>Date:</strong> <%= new Date(previousStats.createdAt).toDateString() %></p>
-                <% } else { %>
-                    <p>No previous attempts found for this subject.</p>
-                <% } %>
+                    <% if (quizResults && quizResults.length> 0) { %>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Date</th>
+                                    <th>Score</th>
+                                    <th>Questions</th>
+                                    <th>Attempted</th>
+                                    <th>Right</th>
+                                    <th>Wrong</th>
+                                    <th>Accuracy</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <% quizResults.forEach((q, index)=> { %>
+                                    <tr>
+                                        <td>
+                                            <%= index + 1 + (currentPage-1)*10 %>
+                                        </td>
+                                        <td>
+                                            <%= new Date(q.createdAt).toLocaleString() %>
+                                        </td>
+                                        <td>
+                                            <%= q.score %>
+                                        </td>
+                                        <td>
+                                            <%= q.noq %>
+                                        </td>
+                                        <td>
+                                            <%= q.attempted %>
+                                        </td>
+                                        <td>
+                                            <%= q.right %>
+                                        </td>
+                                        <td>
+                                            <%= q.wrong %>
+                                        </td>
+                                        <td>
+                                            <%= q.accuracy %> %
+                                        </td>
+                                    </tr>
+                                    <% }) %>
+                            </tbody>
+                        </table>
+
+                        <!-- Pagination -->
+                        <div class="pagination">
+                            <% if (currentPage> 1) { %>
+                                <a href="?page=<%= currentPage - 1 %>">&laquo; Previous</a>
+                                <% } %>
+
+                                    <% for(let i=1; i <=totalPages; i++) { %>
+                                        <a href="?page=<%= i %>" class="<%= currentPage === i ? 'active' : '' %>">
+                                            <%= i %>
+                                        </a>
+                                        <% } %>
+
+                                            <% if (currentPage < totalPages) { %>
+                                                <a href="?page=<%= currentPage + 1 %>">Next &raquo;</a>
+                                                <% } %>
+                        </div>
+
+                        <% } else { %>
+                            <p>No previous attempts found.</p>
+                            <% } %>
+                </div>
+
+                <!-- Quiz Configuration Card -->
+                <div class="card" style="flex:1; min-width:300px;">
+                    <h4>⚙ Configure Your Quiz</h4>
+
+                    <form action="/create-order" method="POST">
+
+                        <input type="hidden" name="exam" value="<%= exam %>">
+                        <input type="hidden" name="subject" value="<%= subject %>">
+
+                        <label>No. of Questions</label>
+                        <select name="count" required>
+                            <option value="10">10 Questions</option>
+                            <option value="20" selected="true">20 Questions</option>
+                            <option value="50">50 Questions</option>
+                        </select>
+
+                        <br><br>
+
+                        <label>Difficulty Level</label>
+                        <select name="difficulty" required>
+                            <option value="easy">Easy</option>
+                            <option value="medium">Medium</option>
+                            <option value="hard" selected="true">Hard</option>
+                        </select>
+
+                        <br><br>
+
+                        <button type="submit" class="btn-primary">
+                            Proceed to Payment
+                        </button>
+
+                    </form>
+                </div>
+
             </div>
+        </section>
 
-            <!-- Quiz Configuration Card -->
-            <div class="card" style="flex:1; min-width:300px;">
-                <h4>⚙ Configure Your Quiz</h4>
-
-                <form action="/create-order" method="POST">
-
-                    <input type="hidden" name="exam" value="<%= exam %>">
-                    <input type="hidden" name="subject" value="<%= subject %>">
-
-                    <label>No. of Questions</label>
-                    <select name="count" required>
-                        <option value="10">10 Questions</option>
-                        <option value="20" selected="true">20 Questions</option>
-                        <option value="50">50 Questions</option>
-                    </select>
-
-                    <br><br>
-
-                    <label>Difficulty Level</label>
-                    <select name="difficulty" required>
-                        <option value="easy" >Easy</option>
-                        <option value="medium">Medium</option>
-                        <option value="hard" selected="true">Hard</option>
-                    </select>
-
-                    <br><br>
-
-                    <button type="submit" class="btn-primary">
-                        Proceed to Payment
-                    </button>
-
-                </form>
-            </div>
-
-        </div>
-    </section>
-
-    <%- include('../../partials/desktop/footer') %>
+        <%- include('../../partials/desktop/footer') %>
 
 </body>
+
 </html>
