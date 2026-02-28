@@ -67,12 +67,14 @@ const questionSchema = new mongoose.Schema(
       type: String,
       required: true,
       default: "zoology"
-    }
+
+    },
   },
   {
     collection: "mcqs",   // 🔥 Ensures it uses existing mcqs collection
     timestamps: true      // Adds createdAt & updatedAt automatically
   }
 );
+
 
 module.exports = mongoose.model("Question", questionSchema);
