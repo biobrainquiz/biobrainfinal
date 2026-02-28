@@ -207,8 +207,6 @@ app.get("/quiz/:exam/:subject/start", requireLogin, async (req, res) => {
   });
 });
 
-
-
 app.get("/preparequiz/:exam/:subject", requireLogin, async (req, res) => {
 
   try {
@@ -221,7 +219,8 @@ app.get("/preparequiz/:exam/:subject", requireLogin, async (req, res) => {
     // start of past exam performance
     const username = req.session.user.username; // logged-in user
     const page = parseInt(req.query.page) || 1; // current page
-    const limit = 10; // results per page
+    const pageLimit = 5; // results per page
+    const resultsLimit = 50; // maximum past performances
 
     // Count total attempts
     const totalResults = await QuizResult.countDocuments({ username, exam, subject });
@@ -229,8 +228,8 @@ app.get("/preparequiz/:exam/:subject", requireLogin, async (req, res) => {
     // Fetch results sorted by latest
     const quizResults = await QuizResult.find({ username, exam, subject })
       .sort({ createdAt: -1 })
-      .skip((page - 1) * limit)
-      .limit(limit)
+      .skip((page - 1) * pageLimit)
+      .limit(pageLimit)
       .lean();
 
     // Calculate accuracy for each
@@ -238,7 +237,7 @@ app.get("/preparequiz/:exam/:subject", requireLogin, async (req, res) => {
       q.accuracy = ((q.right / q.noq) * 100).toFixed(2);
     });
 
-    const totalPages = Math.ceil(Math.min(totalResults, 50) / limit); // max 50 results
+    const totalPages = Math.ceil(Math.min(totalResults, resultsLimit) / pageLimit); // max 50 results
     // end of past exam performance
 
 
@@ -248,14 +247,6 @@ app.get("/preparequiz/:exam/:subject", requireLogin, async (req, res) => {
         exam,
         subject
     }).sort({ createdAt: -1 });*/
-
-    console.log(req.session);
-    console.log(exam);
-    console.log(subject);
-    console.log(quizResults);
-    console.log(page);
-    console.log(totalPages);
-
 
     const device = getDevice(req);
     res.render(`pages/${device}/startquiz`, {

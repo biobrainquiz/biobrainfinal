@@ -1,47 +1,25 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <title>BioBrain - Prepare Quiz</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="/css/desktopStyle.css">
     <style>
-        .card-container {
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-        }
-
-        .full-card {
-            width: 100%;
-            padding: 15px;
-            box-sizing: border-box;
-        }
-
-        .card-row {
-            display: flex;
-            gap: 20px;
-            flex-wrap: wrap;
-        }
-
-        .half-card {
-            flex: 1;
-            min-width: 300px;
-            padding: 15px;
-            box-sizing: border-box;
-        }
-
-        /* Table responsiveness */
+        /* Make table horizontally scrollable on small screens */
         .table-container {
             overflow-x: auto;
             -webkit-overflow-scrolling: touch;
+            /* smooth scrolling on mobile */
             margin-top: 10px;
         }
 
+        /* Table styling */
         table {
             width: 100%;
             min-width: 900px;
-            /* ensures all columns visible */
+            /* ensures all columns fit */
             border-collapse: collapse;
         }
 
@@ -51,7 +29,15 @@
             border: 1px solid #ccc;
             text-align: center;
             white-space: nowrap;
-            /* prevents wrapping */
+            /* prevents text wrapping */
+        }
+
+        /* Card styling */
+        .card {
+            flex: 1 1 100%;
+            min-width: 300px;
+            padding: 10px;
+            box-sizing: border-box;
         }
 
         /* Pagination */
@@ -79,20 +65,31 @@
     <%- include('../../partials/desktop/header') %>
 
         <!-- Hero Section -->
-        <section class="section">
-            <div class="card-container" style="display:flex; flex-direction:column; gap:20px;">
+        <section class="hero">
+            <div class="hero-overlay"></div>
+            <h2>
+                Prepare for
+                <%= exam.charAt(0).toUpperCase() + exam.slice(1) %> -
+                    <%= subject.charAt(0).toUpperCase() + subject.slice(1) %>
+            </h2>
+            <p>Customize your quiz settings and test your knowledge.</p>
+        </section>
 
-                <!-- Full-width card for past quiz performance -->
-                <div class="card full-card">
+        <!-- Main Content -->
+        <section class="section">
+            <div class="card-container">
+
+                <!-- Previous Performance Card -->
+                <div class="card" style="flex:1; min-width:300px;">
                     <h4>📊 Your Last 50 Quiz Performances</h4>
 
                     <% if (quizResults && quizResults.length> 0) { %>
+                        <!-- Responsive table container -->
                         <div class="table-container">
                             <table>
                                 <thead>
                                     <tr>
                                         <th>S.No</th>
-                                        <th>Exam Date</th> <!-- NEW COLUMN -->
                                         <th>Exam</th>
                                         <th>Subject</th>
                                         <th>Difficulty</th>
@@ -107,11 +104,8 @@
                                     <% quizResults.forEach((q, index)=> { %>
                                         <tr>
                                             <td>
-                                                <%= index + 1 + (currentPage - 1) * 10 %>
+                                                <%= index + 1 + (currentPage-1)*10 %>
                                             </td>
-                                            <td>
-                                                <%= new Date(q.createdAt).toLocaleDateString() %>
-                                            </td> <!-- Exam Date -->
                                             <td>
                                                 <%= q.exam %>
                                             </td>
@@ -147,11 +141,13 @@
                             <% if (currentPage> 1) { %>
                                 <a href="?page=<%= currentPage - 1 %>">&laquo; Previous</a>
                                 <% } %>
-                                    <% for(let i=1; i <=totalPages; i++) { %>
+
+                                    <% for (let i=1; i <=totalPages; i++) { %>
                                         <a href="?page=<%= i %>" class="<%= currentPage === i ? 'active' : '' %>">
                                             <%= i %>
                                         </a>
                                         <% } %>
+
                                             <% if (currentPage < totalPages) { %>
                                                 <a href="?page=<%= currentPage + 1 %>">Next &raquo;</a>
                                                 <% } %>
@@ -161,47 +157,46 @@
                             <p>No quiz attempts found.</p>
                             <% } %>
                 </div>
-                <!-- Row for two smaller cards -->
-                <div class="card-row" style="display:flex; gap:20px; flex-wrap:wrap;">
 
-                    <!-- Quiz Configuration -->
-                    <div class="card half-card">
-                        <h4>⚙ Configure Your Quiz</h4>
-                        <form action="/create-order" method="POST">
-                            <input type="hidden" name="exam" value="<%= exam %>">
-                            <input type="hidden" name="subject" value="<%= subject %>">
+                <!-- Quiz Configuration Card -->
+                <div class="card" style="flex:1; min-width:300px;">
+                    <h4>⚙ Configure Your Quiz</h4>
 
-                            <label>No. of Questions</label>
-                            <select name="count" required>
-                                <option value="10">10 Questions</option>
-                                <option value="20" selected>20 Questions</option>
-                                <option value="30">30 Questions</option>
-                            </select>
+                    <form action="/create-order" method="POST">
 
-                            <br><br>
+                        <input type="hidden" name="exam" value="<%= exam %>">
+                        <input type="hidden" name="subject" value="<%= subject %>">
 
-                            <label>Difficulty Level</label>
-                            <select name="difficulty" required>
-                                <option value="easy">Easy</option>
-                                <option value="medium">Medium</option>
-                                <option value="hard" selected>Hard</option>
-                            </select>
+                        <label>No. of Questions</label>
+                        <select name="count" required>
+                            <option value="10">10 Questions</option>
+                            <option value="20" selected="true">20 Questions</option>
+                            <option value="50">50 Questions</option>
+                        </select>
 
-                            <br><br>
-                            <button type="submit" class="btn-primary">Proceed to Payment</button>
-                        </form>
-                    </div>
+                        <br><br>
 
-                    <!-- Placeholder for future feature -->
-                    <div class="card half-card">
-                        <h4>🔮 Dashboard</h4>
-                        <p>Coming soon...</p>
-                    </div>
+                        <label>Difficulty Level</label>
+                        <select name="difficulty" required>
+                            <option value="easy">Easy</option>
+                            <option value="medium">Medium</option>
+                            <option value="hard" selected="true">Hard</option>
+                        </select>
 
+                        <br><br>
+
+                        <button type="submit" class="btn-primary">
+                            Proceed to Payment
+                        </button>
+
+                    </form>
                 </div>
+
             </div>
         </section>
+
         <%- include('../../partials/desktop/footer') %>
 
 </body>
+
 </html>
